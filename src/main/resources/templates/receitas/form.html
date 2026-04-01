@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${action} + ' Receita'">Receita</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 1rem; }
+        label { display: block; margin-top: 1rem; margin-bottom: 0.3rem; }
+        input, select, textarea { width: 100%; padding: 0.5rem; box-sizing: border-box; }
+        textarea { height: 100px; resize: vertical; }
+        .erro-campo { color: red; font-size: 0.85rem; }
+        .acoes { margin-top: 1.5rem; display: flex; gap: 0.75rem; }
+        button, a.btn { padding: 0.5rem 1.25rem; cursor: pointer; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <h2 th:text="${action} + ' Receita'">Receita</h2>
+    <a th:href="@{/receitas}">← Voltar para lista</a>
+
+    <form th:action="@{/receitas/salvar}" th:object="${receita}" method="post">
+        <input type="hidden" th:field="*{id}"/>
+
+        <label for="nome">Nome *</label>
+        <input type="text" id="nome" th:field="*{nome}" placeholder="Nome da receita"/>
+        <span class="erro-campo" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></span>
+
+        <label for="tipoReceita">Tipo *</label>
+        <select id="tipoReceita" th:field="*{tipoReceita}">
+            <option value="">Selecione...</option>
+            <option th:each="t : ${tipos}" th:value="${t.name()}" th:text="${t.label}"></option>
+        </select>
+        <span class="erro-campo" th:if="${#fields.hasErrors('tipoReceita')}" th:errors="*{tipoReceita}"></span>
+
+        <label for="descricao">Descrição *</label>
+        <textarea id="descricao" th:field="*{descricao}" placeholder="Ingredientes e modo de preparo..."></textarea>
+        <span class="erro-campo" th:if="${#fields.hasErrors('descricao')}" th:errors="*{descricao}"></span>
+
+        <label for="custo">Custo (R$) *</label>
+        <input type="number" id="custo" th:field="*{custo}" step="0.01" min="0.01" placeholder="0.00"/>
+        <span class="erro-campo" th:if="${#fields.hasErrors('custo')}" th:errors="*{custo}"></span>
+
+        <label for="dataRegistro">Data de Registro</label>
+        <input type="date" id="dataRegistro" th:field="*{dataRegistro}"/>
+
+        <div class="acoes">
+            <button type="submit" th:text="${action} + ' Receita'">Salvar</button>
+            <a class="btn" th:href="@{/receitas}">Cancelar</a>
+        </div>
+    </form>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Receitas</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 960px; margin: 0 auto; padding: 1rem; }
+        nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #ccc; padding-bottom: 0.75rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { border: 1px solid #ccc; padding: 0.5rem 0.75rem; text-align: left; }
+        th { background: #f0f0f0; }
+        .sucesso { color: green; } .erro { color: red; }
+        .filtros { margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+        input[type=text] { padding: 0.4rem; }
+    </style>
+</head>
+<body>
+    <nav>
+        <strong>Registro de Receitas</strong>
+        <div>
+            Olá, <span sec:authentication="name"></span> |
+            <a th:href="@{/receitas/nova}">Nova Receita</a> |
+            <form th:action="@{/logout}" method="post" style="display:inline">
+                <button type="submit">Sair</button>
+            </form>
+        </div>
+    </nav>
+
+    <h2>Receitas Cadastradas</h2>
+
+    <p th:if="${sucesso}" class="sucesso" th:text="${sucesso}"></p>
+    <p th:if="${erro}"    class="erro"    th:text="${erro}"></p>
+
+    <div class="filtros">
+        <form th:action="@{/receitas}" method="get">
+            <input type="text" name="busca" placeholder="Buscar por nome..." th:value="${busca}"/>
+            <button type="submit">Buscar</button>
+        </form>
+        <a th:href="@{/receitas}">Todas</a>
+        <a th:href="@{/receitas(tipo='DOCE')}">Doces</a>
+        <a th:href="@{/receitas(tipo='SALGADO')}">Salgados</a>
+    </div>
+
+    <table th:if="${not #lists.isEmpty(receitas)}">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Nome</th>
+                <th>Tipo</th>
+                <th>Custo</th>
+                <th>Data</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="r : ${receitas}">
+                <td th:text="${r.id}"></td>
+                <td th:text="${r.nome}"></td>
+                <td th:text="${r.tipoReceita.label}"></td>
+                <td th:text="'R$ ' + ${#numbers.formatDecimal(r.custo, 1, 'POINT', 2, 'COMMA')}"></td>
+                <td th:text="${#temporals.format(r.dataRegistro, 'dd/MM/yyyy')}"></td>
+                <td>
+                    <a th:href="@{/receitas/visualizar/{id}(id=${r.id})}">Ver</a> |
+                    <a th:href="@{/receitas/editar/{id}(id=${r.id})}">Editar</a> |
+                    <form th:action="@{/receitas/deletar/{id}(id=${r.id})}" method="post" style="display:inline"
+                          onsubmit="return confirm('Confirma a exclusão?')">
+                        <button type="submit">Excluir</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p th:if="${#lists.isEmpty(receitas)}">Nenhuma receita encontrada.</p>
+</body>
+</html>

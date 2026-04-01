@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Login - Registro de Receitas</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 400px; margin: 80px auto; padding: 0 1rem; }
+        h1 { text-align: center; margin-bottom: 1.5rem; }
+        label { display: block; margin-top: 1rem; margin-bottom: 0.3rem; }
+        input[type=text], input[type=password] { width: 100%; padding: 0.5rem; box-sizing: border-box; }
+        button { margin-top: 1.25rem; width: 100%; padding: 0.6rem; cursor: pointer; }
+        .erro { color: red; margin-bottom: 1rem; }
+        .msg  { color: green; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <h1>Registro de Receitas</h1>
+    <p th:if="${erro}" class="erro" th:text="${erro}"></p>
+    <p th:if="${msg}"  class="msg"  th:text="${msg}"></p>
+    <form th:action="@{/login}" method="post">
+        <label for="username">Login</label>
+        <input type="text" id="username" name="username" required autofocus/>
+        <label for="password">Senha</label>
+        <input type="password" id="password" name="password" required/>
+        <button type="submit">Entrar</button>
+    </form>
+</body>
+</html>
