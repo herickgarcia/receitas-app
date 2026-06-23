@@ -1,0 +1,122 @@
+// ============================================================
+// Pipeline CI/CD - receitas-app
+// Fases: Versionamento (checkout) -> Build -> Testes (20) ->
+//        Qualidade de código (SonarQube) -> Deploy Homologação ->
+//        (aprovação manual) -> Deploy Produção
+// ============================================================
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "receitas-app"
+        SONAR_HOST_URL = "http://sonarqube:9000"
+        SONAR_PROJECT_KEY = "receitas-app"
+    }
+
+    stages {
+
+        stage('Versionamento - Checkout') {
+            steps {
+                checkout scm
+                sh 'git log -1 --oneline'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn -B clean compile'
+            }
+        }
+
+        stage('Testes Automatizados (20 testes + estatísticas)') {
+            steps {
+                sh 'mvn -B test'
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+                    jacoco execPattern: 'target/jacoco.exec'
+                }
+            }
+        }
+
+        stage('Análise de Qualidade de Código (SonarQube)') {
+            steps {
+                withSonarQubeEnv('sonarqube-local') {
+                    sh """
+                        mvn -B sonar:sonar \
+                          -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                          -Dsonar.host.url=${SONAR_HOST_URL}
+                    """
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage('Build da imagem (artefato)') {
+            steps {
+                sh 'mvn -B package -DskipTests'
+                sh "docker build -t ${IMAGE_NAME}:homolog -t ${IMAGE_NAME}:latest ."
+            }
+        }
+
+        stage('Atualizar Homologação') {
+            steps {
+                sh """
+                    docker stop receitas-app-homolog || true
+                    docker rm receitas-app-homolog || true
+                    docker run -d --name receitas-app-homolog \
+                      --network homolog-net \
+                      -p 8081:8080 \
+                      -e DB_HOST=receitas-db-homolog \
+                      -e DB_PORT=5432 \
+                      -e DB_NAME=receitasdb \
+                      -e DB_USER=postgres \
+                      -e DB_PASS=postgres \
+                      ${IMAGE_NAME}:homolog
+                """
+            }
+        }
+
+        stage('Aprovação para Produção') {
+            steps {
+                input message: 'Homologação validada. Atualizar Produção?', ok: 'Sim, atualizar Produção'
+            }
+        }
+
+        stage('Atualizar Produção') {
+            steps {
+                sh "docker tag ${IMAGE_NAME}:homolog ${IMAGE_NAME}:prod"
+                sh """
+                    docker stop receitas-app-prod || true
+                    docker rm receitas-app-prod || true
+                    docker run -d --name receitas-app-prod \
+                      --network prod-net \
+                      -p 8082:8080 \
+                      -e DB_HOST=receitas-db-prod \
+                      -e DB_PORT=5432 \
+                      -e DB_NAME=receitasdb \
+                      -e DB_USER=postgres \
+                      -e DB_PASS=postgres \
+                      ${IMAGE_NAME}:prod
+                """
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline concluído com sucesso. Flyway aplicou as migrations pendentes automaticamente na inicialização da aplicação."
+        }
+        failure {
+            echo "Pipeline falhou - verifique os testes ou a análise de qualidade de código (SonarQube)."
+        }
+    }
+}

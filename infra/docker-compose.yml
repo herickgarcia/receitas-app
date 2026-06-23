@@ -1,0 +1,141 @@
+version: '3.8'
+
+# ============================================================
+# Infraestrutura completa - Tarefa Final Gerência de Configuração
+# 6 containers:
+#   1. receitas-db-homolog   - PostgreSQL (Homologação)
+#   2. receitas-app-homolog  - Spring Boot (Homologação)
+#   3. receitas-db-prod      - PostgreSQL (Produção)
+#   4. receitas-app-prod     - Spring Boot (Produção)
+#   5. jenkins               - CI/CD (integração, testes, qualidade, build, deploy)
+#   6. sonarqube              - Análise de qualidade de código
+# ============================================================
+
+services:
+
+  # ---------------- HOMOLOGAÇÃO ----------------
+  receitas-db-homolog:
+    image: postgres:16-alpine
+    container_name: receitas-db-homolog
+    environment:
+      POSTGRES_DB: receitasdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pg_data_homolog:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - homolog-net
+
+  receitas-app-homolog:
+    build:
+      context: ..
+    image: receitas-app:homolog
+    container_name: receitas-app-homolog
+    ports:
+      - "8081:8080"
+    environment:
+      DB_HOST: receitas-db-homolog
+      DB_PORT: 5432
+      DB_NAME: receitasdb
+      DB_USER: postgres
+      DB_PASS: postgres
+    depends_on:
+      receitas-db-homolog:
+        condition: service_healthy
+    networks:
+      - homolog-net
+
+  # ---------------- PRODUÇÃO ----------------
+  receitas-db-prod:
+    image: postgres:16-alpine
+    container_name: receitas-db-prod
+    environment:
+      POSTGRES_DB: receitasdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pg_data_prod:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - prod-net
+
+  receitas-app-prod:
+    build:
+      context: ..
+    image: receitas-app:prod
+    container_name: receitas-app-prod
+    ports:
+      - "8082:8080"
+    environment:
+      DB_HOST: receitas-db-prod
+      DB_PORT: 5432
+      DB_NAME: receitasdb
+      DB_USER: postgres
+      DB_PASS: postgres
+    depends_on:
+      receitas-db-prod:
+        condition: service_healthy
+    networks:
+      - prod-net
+
+  # ---------------- CI/CD ----------------
+  jenkins:
+    build:
+      context: ./jenkins
+    image: jenkins-receitas:latest
+    container_name: jenkins
+    user: root
+    ports:
+      - "8090:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - homolog-net
+      - prod-net
+      - ci-net
+
+  # ---------------- QUALIDADE DE CÓDIGO ----------------
+  sonarqube:
+    image: sonarqube:10-community
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    volumes:
+      - sonar_data:/opt/sonarqube/data
+      - sonar_extensions:/opt/sonarqube/extensions
+      - sonar_logs:/opt/sonarqube/logs
+    networks:
+      - ci-net
+
+networks:
+  homolog-net:
+    driver: bridge
+  prod-net:
+    driver: bridge
+  ci-net:
+    driver: bridge
+
+volumes:
+  pg_data_homolog:
+  pg_data_prod:
+  jenkins_data:
+  sonar_data:
+  sonar_extensions:
+  sonar_logs:
