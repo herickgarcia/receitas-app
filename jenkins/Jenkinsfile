@@ -70,7 +70,7 @@ pipeline {
                     docker stop receitas-app-homolog || true
                     docker rm receitas-app-homolog || true
                     docker run -d --name receitas-app-homolog \
-                      --network homolog-net \
+                      --network infra_homolog-net \
                       -p 8081:8080 \
                       -e DB_HOST=receitas-db-homolog \
                       -e DB_PORT=5432 \
@@ -95,7 +95,7 @@ pipeline {
                     docker stop receitas-app-prod || true
                     docker rm receitas-app-prod || true
                     docker run -d --name receitas-app-prod \
-                      --network prod-net \
+                      --network infra_prod-net \
                       -p 8082:8080 \
                       -e DB_HOST=receitas-db-prod \
                       -e DB_PORT=5432 \
