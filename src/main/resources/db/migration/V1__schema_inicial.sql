@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS receita (
 
 -- Usuario padrao (senha: admin123)
 INSERT INTO usuario (nome, login, senha, situacao) VALUES
-('Administrador', 'admin', '$2a$10$7QfnHne9FX8JBOfOlZpkXunlrNnB2oZNB2Bl8aXmb22qhbDgEXg4i', 'ATIVO');
+('Administrador', 'admin', 'admin123', 'ATIVO');
 
 -- 10 receitas de exemplo
 INSERT INTO receita (nome, descricao, data_registro, custo, tipo_receita) VALUES
