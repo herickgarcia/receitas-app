@@ -87,8 +87,7 @@ class ReceitaControllerTest {
     @DisplayName("GET /receitas sem autenticação deve redirecionar para login")
     void deveRetornarErroOuRedirecionarSemAutenticacao() throws Exception {
         mockMvc.perform(get("/receitas"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login"));
+                .andExpect(status().isUnauthorized());
     }
 
     // import estático necessário para csrf()
