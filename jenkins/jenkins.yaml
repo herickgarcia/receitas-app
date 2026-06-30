@@ -1,0 +1,47 @@
+jenkins:
+  systemMessage: "Jenkins configurado automaticamente via JCasC - receitas-app"
+  numExecutors: 2
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "admin1234"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+unclassified:
+  sonarGlobalConfiguration:
+    installations:
+      - name: "sonarqube-local"
+        serverUrl: "http://sonarqube:9000"
+        credentialsId: "sonarqube-token"
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - string:
+              scope: GLOBAL
+              id: "sonarqube-token"
+              secret: "sqp_6947a7b9e0ef2248f83b032bbe0a2618d800c655"
+              description: "SonarQube Token"
+
+jobs:
+  - script: >
+      pipelineJob('receitas-app-pipeline') {
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('https://github.com/herickgarcia/receitas-app.git')
+                }
+                branch('*/main')
+              }
+            }
+            scriptPath('jenkins/Jenkinsfile')
+          }
+        }
+      }

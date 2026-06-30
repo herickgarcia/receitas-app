@@ -1,9 +1,7 @@
 # Jenkins customizado com Docker CLI, Maven e JDK 21
 # necessário para rodar build, testes (20 testes JUnit), Jacoco e SonarScanner
 FROM jenkins/jenkins:lts-jdk21
-
 USER root
-
 # Instala Docker CLI (para Jenkins acionar containers de deploy via docker-compose)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -16,12 +14,13 @@ RUN apt-get update && \
     apt-get update && \
     apt-get install -y --no-install-recommends docker-ce-cli docker-compose-plugin && \
     rm -rf /var/lib/apt/lists/*
-
 # Maven
 RUN apt-get update && apt-get install -y --no-install-recommends maven && rm -rf /var/lib/apt/lists/*
-
-# Plugins do Jenkins: pipeline, git, sonarqube scanner, docker
+# Plugins do Jenkins: pipeline, git, sonarqube scanner, docker, JCasC
 COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
 RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt
-
+# Configuration as Code: configura Jenkins automaticamente ao subir
+COPY jenkins.yaml /usr/share/jenkins/ref/jenkins.yaml
+ENV CASC_JENKINS_CONFIG=/usr/share/jenkins/ref/jenkins.yaml
+ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false"
 USER jenkins
