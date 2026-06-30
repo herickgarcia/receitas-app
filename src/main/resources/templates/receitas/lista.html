@@ -26,12 +26,9 @@
             </form>
         </div>
     </nav>
-
-    <h2>Receitas Cadastradasssss</h2>
-
+    <h2>Receitos Cadastrados</h2>
     <p th:if="${sucesso}" class="sucesso" th:text="${sucesso}"></p>
     <p th:if="${erro}"    class="erro"    th:text="${erro}"></p>
-
     <div class="filtros">
         <form th:action="@{/receitas}" method="get">
             <input type="text" name="busca" placeholder="Buscar por nome..." th:value="${busca}"/>
@@ -41,7 +38,6 @@
         <a th:href="@{/receitas(tipo='DOCE')}">Doces</a>
         <a th:href="@{/receitas(tipo='SALGADO')}">Salgados</a>
     </div>
-
     <table th:if="${not #lists.isEmpty(receitas)}">
         <thead>
             <tr>
@@ -71,7 +67,6 @@
             </tr>
         </tbody>
     </table>
-
     <p th:if="${#lists.isEmpty(receitas)}">Nenhuma receita encontrada.</p>
 </body>
 </html>
