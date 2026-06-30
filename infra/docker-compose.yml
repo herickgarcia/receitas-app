@@ -94,7 +94,7 @@ services:
   # ---------------- CI/CD ----------------
   jenkins:
     build:
-      context: ../jenkins
+      context: ./jenkins
     image: jenkins-receitas:latest
     container_name: jenkins
     user: root
