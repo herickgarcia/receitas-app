@@ -25,7 +25,7 @@ credentials:
           - string:
               scope: GLOBAL
               id: "sonarqube-token"
-              secret: "squ_bdcd605f786823fa61788609d1b545736bac7b20"
+              secret: "squ_e639e1e3946b0b1e156c7d6eb36375b3f529e8d5"
               description: "SonarQube Token"
 
 jobs:
